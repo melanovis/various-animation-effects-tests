@@ -28,7 +28,6 @@ end
 inital_landscape_bandind = round(linspace(1,img_dim(2),num_cells+3)); %one extra cell for background region
 intial_landscape = ones(img_dim);
 for n=3:length(inital_landscape_bandind)-1
-    %intial_landscape(inital_landscape_bandind(n-1):inital_landscape_bandind(n),1:img_dim(2)) = n-2;
     intial_landscape(:,inital_landscape_bandind(n-1):inital_landscape_bandind(n)) = length(inital_landscape_bandind)-n + 1;
 end
 intial_landscape(1:end/4,:)=1;
@@ -37,10 +36,6 @@ intial_landscape(end*3/4:end,:)=1;
 
 landscape_current = intial_landscape;
 landscape_prev = intial_landscape;
-
-
-% delete(gcp('nocreate'));
-% parpool('local',8);
 
 while true
 
@@ -75,7 +70,6 @@ while true
             [ind_r, ind_c] = ind2sub(size(interior_periregion), rand_spec_cellind);
 
             %flip to whatever cell index is in nearby_mask
-            %landscape_current(ind_r, ind_c) = interior_nearbymask(ind_r, ind_c);
             pix_changelist(n,:) = [ind_r, ind_c, interior_nearbymask(ind_r, ind_c)];
         else
             %flip exterior cell to interior index
@@ -86,7 +80,6 @@ while true
             [ind_r, ind_c] = ind2sub(size(exterior_periregion), rand_spec_cellind);
 
             %flip to n
-            %landscape_current(ind_r, ind_c) = n;
             pix_changelist(n,:) = [ind_r, ind_c, n];
         end
     end
@@ -122,9 +115,7 @@ while true
         end
     end
 
-
     %descision making
-    
     if some_cell_broken
         landscape_current = landscape_prev;
     else
@@ -135,7 +126,6 @@ end
 
 cmap = interp1([0,0.2,0.4,0.6,0.8,1], [[0 0 0]; [0.259 0.039 0.408]; [0.584 0.149 0.404]; [0.867 0.318 0.227]; [0.98 0.647 0.039]; [0.98 1 0.643]], linspace(0, 1, 1e3));
 colormap(cmap)
-
 
 subplot(2,1,1)
 hold on

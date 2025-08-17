@@ -7,7 +7,7 @@ clf reset
 record_video = true;
 
 if record_video == true
-    v = VideoWriter("traq_markov_fadein", 'MPEG-4');
+    v = VideoWriter("test", 'MPEG-4');
     v.FrameRate = 30;
     open(v);
 end
@@ -32,27 +32,18 @@ target_celladj = ones(img_dim);
 for n=1:num_cells
     target_celladj(target_comp.PixelIdxList{n}) = num_cells-n+2;
 end
-% target_celladj = flipud(target_celladj);
-
 inital_landscape_bandind = round(linspace(1,img_dim(2),num_cells+3)); %one extra cell for background region
 intial_landscape = ones(img_dim);
 for n=3:length(inital_landscape_bandind)-1
-    %intial_landscape(inital_landscape_bandind(n-1):inital_landscape_bandind(n),1:img_dim(2)) = n-2;
     intial_landscape(:,inital_landscape_bandind(n-1):inital_landscape_bandind(n)) = length(inital_landscape_bandind)-n + 1;
-    %intial_landscape(:,inital_landscape_bandind(n)-3:inital_landscape_bandind(n)) = 1;
 end
 intial_landscape(1:end*0.05,:) = 1;
 intial_landscape(end*0.95:end,:) = 1;
-
-
 
 %landscape_current = imdilate(target_celladj, strel('disk', 10));
 landscape_current = intial_landscape;
 landscape_prev = landscape_current;
 fitness_prev = -inf;
-
-% delete(gcp('nocreate'));
-% parpool('local',8);
 
 %cell flipping control
 ind_1 = 1;
@@ -92,26 +83,11 @@ while fitness_current < 1
 
         check_good = false;
         while ~check_good
-
-            % if rand() < 0.5
-            %     %flip interior cell to exterior index
-            %     peri_spec_inds = find(interior_periregion);
-            %     rand_spec_cellind = peri_spec_inds(randi(numel(peri_spec_inds)));
-            %     [ind_r, ind_c] = ind2sub(size(interior_periregion), rand_spec_cellind);
-            %     %flip to whatever cell index is in nearby_mask
-            %     landscape_current(ind_r, ind_c) = interior_nearbymask(ind_r, ind_c);
-            % else
-            %     %flip exterior cell to interior index
-            %     peri_spec_inds = find(exterior_periregion);
-            %     rand_spec_cellind = peri_spec_inds(randi(numel(peri_spec_inds)));
-            %     [ind_r, ind_c] = ind2sub(size(exterior_periregion), rand_spec_cellind);
-            %     %flip to n
-            %     landscape_current(ind_r, ind_c) = n;
-            % end
             
             peri_spec_inds = find(interior_periregion);
             rand_spec_cellind = peri_spec_inds(randi(numel(peri_spec_inds)));
             [ind_r, ind_c] = ind2sub(size(interior_periregion), rand_spec_cellind);
+
             %flip to whatever cell index is in nearby_mask
             landscape_current(ind_r, ind_c) = interior_nearbymask(ind_r, ind_c);
 
@@ -124,7 +100,6 @@ while fitness_current < 1
         end
         
         %checking if any cells have been broken (if so immediately rejected)
-        %cell_broken_list = zeros(num_cells,1);
         cell_broken = false;
         landscape_squeezed_new = reshape(landscape_current,[],1);
         for m = 1:num_cells+1 
@@ -133,8 +108,6 @@ while fitness_current < 1
             cell_spec = reshape(cell_spec,img_dim);
             cell_spec_conn = bwconncomp(cell_spec,4);
             if cell_spec_conn.NumObjects > 1 || cell_spec_conn.NumObjects == 0
-                %cell has been broken
-                %cell_broken_list(m) = 1;
                 cell_broken = true;
                 break
             end
@@ -158,7 +131,6 @@ while fitness_current < 1
                 f_countdown = f_countdown - 1;
                 if rand() < 0.02 + rand_modifier
                     landscape_prev = landscape_current; %accept new map anyway
-                    %progress_plot = true;
                 else
                     landscape_current = landscape_prev; %reject map
                 end
@@ -214,13 +186,3 @@ end
 if record_video == true
     close(v);
 end
-
-
-
-% cmap = interp1([0,0.2,0.4,0.6,0.8,1], [[0 0 0]; [0.259 0.039 0.408]; [0.584 0.149 0.404]; [0.867 0.318 0.227]; [0.98 0.647 0.039]; [0.98 1 0.643]], linspace(0, 1, 1e3));
-% colormap(cmap)
-% hold on
-% axis equal tight
-% surf(target_celladj,EdgeColor="none")
-% set(gca,'XTickLabel',[]);
-% set(gca,'YTickLabel',[]);
